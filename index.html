@@ -72,7 +72,7 @@ button{font:inherit;cursor:pointer}input,textarea{font:inherit}
 <input id="lname" placeholder="Zobrazované jméno" class="hid" maxlength="24">
 <input id="lmail" type="email" placeholder="E-mail" required><input id="lpass" type="password" placeholder="Heslo (min. 6 znaků)" required minlength="6">
 <div id="lerr"></div><button class="btn" id="lbtn">Přihlásit se</button>
-<a href="#" id="lsw" style="color:#7f85f5;font-size:13px">Nemáš účet? Vytvoř si ho</a></form></div>
+<a href="#" id="lfg" style="color:#adadad;font-size:13px">Zapomenuté heslo?</a><a href="#" id="lsw" style="color:#7f85f5;font-size:13px">Nemáš účet? Vytvoř si ho</a></form></div>
 <div id="top"><div class="logo"><i>B</i>Bubble Teams</div><input id="search" placeholder="🔍 Hledat lidi a zprávy"><div id="me"></div></div>
 <div id="wrap"><nav id="rail">
 <button data-v="act"><b>🔔</b>Aktivita</button><button data-v="chat"><b>💬</b>Chat</button><button data-v="teams" class="on"><b>👥</b>Týmy</button><button data-v="cal"><b>📅</b>Kalendář</button><button data-v="calls"><b>📞</b>Hovory</button></nav>
@@ -87,9 +87,9 @@ button{font:inherit;cursor:pointer}input,textarea{font:inherit}
 <div id="toast"></div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import{getFirestore,collection,doc,setDoc,addDoc,updateDoc,deleteDoc,getDoc,getDocs,onSnapshot,query,where,arrayUnion}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-const VERSION='1.0';
+const VERSION='1.1';
 const fb=initializeApp({"apiKey": "AIzaSyBovG00qfDWUBcS9pJlS_FwOH4etF9Sv0Y", "authDomain": "flex-bubble.firebaseapp.com", "projectId": "flex-bubble", "storageBucket": "flex-bubble.firebasestorage.app", "messagingSenderId": "171220277752", "appId": "1:171220277752:web:d5d68647bf1759db58de0d"},'bubbleteams'),auth=getAuth(fb),db=getFirestore(fb);
 const P=['artifacts','flex-bubble-prod-v10','public','data'];const C=n=>collection(db,...P,n),D=(n,id)=>doc(db,...P,n,id);
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -105,6 +105,7 @@ const tm=t=>{const d=new Date(t),n=new Date();return d.toDateString()===n.toDate
 // ---------- login
 let reg=false;
 $('lsw').onclick=e=>{e.preventDefault();reg=!reg;$('lname').classList.toggle('hid',!reg);$('lname').required=reg;$('lbtn').textContent=reg?'Vytvořit účet':'Přihlásit se';$('lt').textContent=reg?'Nový účet':'Přihlas se ke svému účtu';$('lsw').textContent=reg?'Už máš účet? Přihlas se':'Nemáš účet? Vytvoř si ho'};
+$('lfg').onclick=async e=>{e.preventDefault();const m=$('lmail').value.trim();if(!m){$('lerr').textContent='Nejdřív napiš e-mail';return}try{await sendPasswordResetEmail(auth,m);$('lerr').style.color='#6bb700';$('lerr').textContent='✅ Poslal jsem ti e-mail na změnu hesla (koukni i do spamu)'}catch(x){$('lerr').style.color='';$('lerr').textContent=ERR[x.code]||x.message}};
 const ERR={'auth/invalid-credential':'Špatný e-mail nebo heslo','auth/email-already-in-use':'Tenhle e-mail už má účet','auth/weak-password':'Heslo musí mít aspoň 6 znaků','auth/invalid-email':'Neplatný e-mail','auth/too-many-requests':'Moc pokusů, zkus to za chvíli','auth/operation-not-allowed':'Přihlášení e-mailem není ve Firebase zapnuté'};
 $('lf').onsubmit=async e=>{e.preventDefault();$('lerr').textContent='';$('lbtn').disabled=true;try{
  if(reg){const c=await createUserWithEmailAndPassword(auth,$('lmail').value.trim(),$('lpass').value);const nm=$('lname').value.trim()||'Uživatel';await updateProfile(c.user,{displayName:nm});await setDoc(D('bt_users',c.user.uid),{name:nm,color:COLS[Math.floor(Math.random()*COLS.length)],seen:Date.now()},{merge:true})}
